@@ -3,16 +3,19 @@ import java.io.FileNotFoundException;  // Import this class to handle errors
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner; // Import the Scanner class to read text files
-
+import java.io.IOException;  // Import the IOException class to handle errors
+import java.io.FileWriter;   // Import the FileWriter class
+import java.io.BufferedWriter;
 public class Mapple {
-
+    public static ArrayList<Product> shoppingCart = new ArrayList<>();
+    public static HashMap<String, Product> productsMap = new HashMap<>();
     public static void main(String[] args){
-        ArrayList<Product> shoppingCart = new ArrayList<>();
+
         System.out.println("Welcome to the Mapple store \n");
-        menu(shoppingCart);
+        menu();
     }
 
-    public static void menu(ArrayList<Product> cart){
+    public static void menu(){
 
         System.out.println("Main menu \nSelect an option ");
         System.out.println("1: See products");
@@ -22,17 +25,16 @@ public class Mapple {
         int optionSelected = scanner.nextInt();
         scanner.nextLine();
         if (optionSelected == 1){
-            displayProducts(scanner, cart);
+            displayProducts(scanner);
         } else if (optionSelected == 2) {
-            shoppingCart(cart);
+            shoppingCart();
         }
     }
 
     //Display all Products that the store offers with its given prices
-    public static void displayProducts(Scanner scanner, ArrayList<Product> shoppingCart){
+    public static void displayProducts(Scanner scanner){
         ArrayList<Product> products = new ArrayList<>();
 
-        HashMap<String, Product> productsMap = new HashMap<>();
         try {
             File myObj = new File("productPrice.csv");
             Scanner myReader = new Scanner(myObj);
@@ -70,14 +72,14 @@ public class Mapple {
            }
         }
         //go back to the main menu updating the shopping cart
-        menu(shoppingCart);
+        menu();
 
     }
 
     //Print shopping cart so the user verify what's in it and how much will it cost
-    public static void shoppingCart(ArrayList<Product> cart){
+    public static void shoppingCart(){
         Scanner scanner = new Scanner(System.in);
-        showCart(cart);
+        showCart();
 
         int selection;
         while (true){
@@ -87,34 +89,62 @@ public class Mapple {
             System.out.println("3: remove an item");
             selection = scanner.nextInt();
             if(selection == 1){
-                menu(cart);
+                menu();
+                break;
             } else if (selection == 2) {
-                //checkoutFunction
+                checkOut();
+                break;
             } else if (selection == 3) { //remove item from list
-                removeItemFromcart(cart);
+                removeItemFromCart();
             }
         }
 
     }
 
-    public static void showCart(ArrayList<Product> cart){
-        System.out.println("Shopping cart: \n");
-        double total = 0;//stores the total amount to pay
-        for (Product i : cart) {
-            System.out.printf("%-35s ", i.productName);
-            System.out.printf("$% .2f %n ",i.productPrice);
+    public static double calculateTotal(){
+        double total = 0;
+        for (Product i : shoppingCart) {
             total += i.productPrice;
         }
+        return total;
+    }
+    public static void showCart(){
+        System.out.println("Shopping cart: \n");
+
+        for (Product i : shoppingCart) {
+            System.out.printf("%-35s ", i.productName);
+            System.out.printf("$% .2f %n ",i.productPrice);
+        }
         System.out.printf("%-35s ","Total");
-        System.out.printf("$% .2f %n ", total);
+        System.out.printf("$% .2f %n \n", calculateTotal());
     }
 
-    public static ArrayList<Product> removeItemFromcart(ArrayList<Product> cart){
-        return cart;
+    public static void removeItemFromCart(){
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Which item do you want to remove from the shopping cart: ");
+        shoppingCart.remove(productsMap.get(scanner.nextLine()));
+        shoppingCart();
     }
 
-//    public static void checkOut(){
-//
-//    }
+    public static void checkOut(){
+        System.out.println("Printing receipt");
+        try {
+            BufferedWriter outputWriter;
+            outputWriter = new BufferedWriter(new FileWriter("receipt.csv"));
+            for (Product i : shoppingCart) {
+                outputWriter.write(i.productName);
+                outputWriter.write(",");
+                outputWriter.write("$"+(i.productPrice));
+                outputWriter.newLine();
+            }
+            outputWriter.write("Total,"+"$"+calculateTotal());
+            outputWriter.flush();
+            outputWriter.close();
+            System.out.println("Successfully Printed receipt.");
+        } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+    }
 
 }
